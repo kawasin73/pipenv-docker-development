@@ -1,0 +1,32 @@
+FROM python:3.7.4
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    git \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV ENTRYKIT_VERSION 0.4.0
+
+RUN wget https://github.com/progrium/entrykit/releases/download/v${ENTRYKIT_VERSION}/entrykit_${ENTRYKIT_VERSION}_Linux_x86_64.tgz \
+    && tar -xvzf entrykit_${ENTRYKIT_VERSION}_Linux_x86_64.tgz \
+    && rm entrykit_${ENTRYKIT_VERSION}_Linux_x86_64.tgz \
+    && mv entrykit /bin/entrykit \
+    && chmod +x /bin/entrykit \
+    && entrykit --symlink
+
+WORKDIR /app
+
+RUN pip install --upgrade pip && pip install pipenv
+
+RUN echo "if [[ -z \"\${VIRTUAL_ENV}\" ]]; then" >> /root/.bashrc && \
+    echo "source \$(pipenv --venv)/bin/activate" >> /root/.bashrc && \
+    echo "fi"                                    >> /root/.bashrc
+
+COPY scripts/ /opt/bin/
+
+ENTRYPOINT [ \
+    "prehook", "/opt/bin/docker-setup.sh", "--", \
+    "/opt/bin/docker-entrypoint.sh"]

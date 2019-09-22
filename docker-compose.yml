@@ -1,0 +1,12 @@
+version: "3"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: "Dockerfile.dev"
+    command: python main.py
+    volumes:
+      - .:/app
+      - python-packages:/root/.local/share
+volumes:
+  python-packages:
